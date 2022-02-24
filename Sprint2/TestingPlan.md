@@ -1,7 +1,11 @@
 # JeVaisBienAller Testing Plan
 
+Written documentation, even comments on functions tend to go stale, becoming irrelevant, but along with the source code, tests are up-to-date documentation of the usage of our code. Good test coverage also allows us to be more agile: we can refactor big portions of the code without fear, since we can trust that our tests will pick up breaking changes. It is therefore vital to have a proper testing plan.
+
+Our testing plan consists of a series of backend tests, frontend tests and finally some integration tests to ensure that our software meets our design. We consider our backend and frontend tests as our unit tests, since they test our app's components as we implement them. Our integration tests is more closely related to our user stories.
+
 ## Backend tests
-\[[Files](https://github.com/SOEN-390-Team-20/Team-20-SOEN-390/tree/main/tests)\] \[[view on CircleCI](https://app.circleci.com/pipelines/github/SOEN-390-Team-20/Team-20-SOEN-390/201/workflows/7e55f7ac-6b90-4ee8-b639-13874cbfd3f5/jobs/405)]
+\[[Files](https://github.com/SOEN-390-Team-20/Team-20-SOEN-390/tree/main/tests)\] \[[View on CircleCI](https://app.circleci.com/pipelines/github/SOEN-390-Team-20/Team-20-SOEN-390/201/workflows/7e55f7ac-6b90-4ee8-b639-13874cbfd3f5/jobs/405)]
 
 <details>
   <summary>Console output</summary>
@@ -51,8 +55,37 @@
   
 </details>
 
+For the backend tests, we have tests for our api endpoints. Our backend tests are also integration tests, technically speaking, because it uses a live database (jevaisbienaller-test). We could be mocking `MongoDB` and `mongoose` (like with [mockingoose](https://www.npmjs.com/package/mockingoose)) but we found that there was more business value to test the api directly with the live database for now. We can assert for status code and for an expected json output from the api with a simple syntax using [SuperTest](https://www.npmjs.com/package/supertest) and [Jest](https://jestjs.io/) together. Our coverage is complete for important endpoints like the login and the registration.
+
+<details>
+  <summary>Example test</summary>
+  
+  ```js
+   test('OLD: POST /api/users : TEST_PATIENT2 can register', async () => {
+    // Precondition: user should not already exist
+    // This is a call to the live database through our controller
+    const isUserExist = await User.findOne({ email: TEST_PATIENT2.email });
+    if (isUserExist) {
+      await User.findByIdAndDelete(isUserExist.id);
+    }
+
+    // Register using the patient payload
+    await api
+      .post('/api/users')
+      .send(TEST_PATIENT2)
+      .expect(200)
+      .expect('Content-Type', /application\/json/);
+
+    // Postcondition: user should exist in the mongodb database
+    const addedUser = await User.findOne({ email: TEST_PATIENT2.email });
+    expect(addedUser.email).toContain(TEST_PATIENT2.email);
+  });
+  ```
+  
+</details>
+
 ## Frontend tests
-\[[Files](https://github.com/SOEN-390-Team-20/Team-20-SOEN-390/tree/main/client/src/views/__test__)] \[[view on CircleCI](https://app.circleci.com/pipelines/github/SOEN-390-Team-20/Team-20-SOEN-390/201/workflows/955e87c7-de6f-454d-bd8d-bdacb953a07d/jobs/402)]
+\[[Files](https://github.com/SOEN-390-Team-20/Team-20-SOEN-390/tree/main/client/src/views/__test__)] \[[View on CircleCI](https://app.circleci.com/pipelines/github/SOEN-390-Team-20/Team-20-SOEN-390/201/workflows/955e87c7-de6f-454d-bd8d-bdacb953a07d/jobs/402)]
 
 <details>
   <summary>Console Output</summary>
@@ -74,9 +107,23 @@
   
 </details>
 
+Here we use the [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). Our frontend tests are pretty basic compared to our backend. This is definitely an area where we can improve, but we have little component reuse at this point. It should be noted that the integration tests test the frontend more in-depth than the unit tests we have here.
+
+<details>
+  <summary>Example test</summary>
+  We basically assert that the component renders the expected text.
+  
+  ```js
+  it("should have initial title 'Login'", async () => {
+  render(<MockLogin />);
+  const title = screen.getByText(/login/i);
+  expect(title).toBeInTheDocument();
+  });
+  ```
+</details>
 
 ## Integration tests
-\[[Files](https://github.com/SOEN-390-Team-20/Team-20-SOEN-390/tree/main/client/src/views/__test__)] \[[view on CircleCI](https://app.circleci.com/pipelines/github/SOEN-390-Team-20/Team-20-SOEN-390/201/workflows/7e55f7ac-6b90-4ee8-b639-13874cbfd3f5/jobs/406)]
+\[[Files](https://github.com/SOEN-390-Team-20/Team-20-SOEN-390/tree/main/client/src/views/__test__)] \[[View on CircleCI](https://app.circleci.com/pipelines/github/SOEN-390-Team-20/Team-20-SOEN-390/201/workflows/7e55f7ac-6b90-4ee8-b639-13874cbfd3f5/jobs/406)]
 
 <details>
   <summary>Console Output</summary>
@@ -203,4 +250,14 @@
     └────────────────────────────────────────────────────────────────────────────────────────────────┘
       ✔  All specs passed!                        00:09        3        3        -        -        -  
   ```
+</details>
+
+Our integration tests cover the following stories:
+* User can register
+* User can login
+
+by interacting directly with a test version of our website using [Cypress](https://www.cypress.io/). It also asserts that the frontend follows the design of the UI prototype.
+
+<details>
+  <summary></summary>
 </details>
