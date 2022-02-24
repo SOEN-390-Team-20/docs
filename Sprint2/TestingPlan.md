@@ -256,8 +256,27 @@ Our integration tests cover the following stories:
 * User can register
 * User can login
 
-by interacting directly with a test version of our website using [Cypress](https://www.cypress.io/). It also asserts that the frontend follows the design of the UI prototype.
+by interacting directly with a test version of our website using [Cypress](https://www.cypress.io/).
+It also asserts that the frontend follows the design of the UI prototype.
 
 <details>
-  <summary></summary>
+  <summary>Example test</summary>
+  
+  ```js
+  it('Can login with proper user', () => {
+    cy.visit('/');
+    cy.contains('JeVaisBienAller');
+    cy.contains('LOGIN');
+    cy.contains('FORGOT PASSWORD?');
+    cy.contains('CREATE NEW ACCOUNT');
+
+    cy.get('input[name="email-field"]').type(TEST_PATIENT1.email);
+    cy.get('input[name="password-field"]').type(TEST_PATIENT1.password);
+
+    cy.get('button[name="login-button"').click();
+
+    cy.contains(TEST_PATIENT1.firstName);
+  });
+  ```
+  
 </details>
